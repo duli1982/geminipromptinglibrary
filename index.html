@@ -191,7 +191,7 @@
             categoryCardsContainer.innerHTML = '';
             for (const categoryName in promptData) {
                 const category = promptData[categoryName];
-                const subCategories = Object.keys(category.subCategories);
+                const subCategories = Object.keys(category);
 
                 const card = document.createElement('div');
                 card.className = 'prompt-block flex flex-col';
@@ -203,7 +203,6 @@
                 card.innerHTML = `
                     <div class="p-6">
                         <h2 class="text-xl font-bold text-center main-heading">Gemini Prompts for <span class="accent-text">${categoryName}</span></h2>
-                        <p class="text-center text-gray-500 mt-2">${category.description}</p>
                     </div>
                     <div class="flex-grow px-6 category-card-list scrollable-list overflow-y-auto">
                         <ul>${subCategoryLinks}</ul>
@@ -224,19 +223,14 @@
         function renderDetailView(activeCategory, activeSubCategory) {
             // Render the main prompt content
             promptDisplayArea.innerHTML = '';
-            const subCategory = promptData[activeCategory].subCategories[activeSubCategory];
+            const subCategoryPrompts = promptData[activeCategory][activeSubCategory];
 
             const header = document.createElement('h1');
-            header.className = 'text-3xl font-bold mb-2 main-heading';
+            header.className = 'text-3xl font-bold mb-8 main-heading';
             header.innerHTML = `Gemini Prompts for <span class="accent-text">${activeSubCategory}</span>`;
             promptDisplayArea.appendChild(header);
 
-            const subCategoryDescription = document.createElement('p');
-            subCategoryDescription.className = 'text-lg text-gray-500 mb-8';
-            subCategoryDescription.textContent = subCategory.description;
-            promptDisplayArea.appendChild(subCategoryDescription);
-
-            subCategory.prompts.forEach(prompt => {
+            subCategoryPrompts.forEach(prompt => {
                 const promptEl = document.createElement('div');
                 promptEl.className = 'mb-8';
                 promptEl.innerHTML = `
@@ -251,14 +245,13 @@
             // Render the quick links sidebar
             quickLinksSidebar.innerHTML = '';
             for (const categoryName in promptData) {
-                const category = promptData[categoryName];
                 const categoryTitle = document.createElement('h4');
                 categoryTitle.className = 'font-bold mt-4 mb-2 main-heading';
                 categoryTitle.innerHTML = `Gemini Prompts for <span class="accent-text">${categoryName}</span>`;
                 quickLinksSidebar.appendChild(categoryTitle);
 
                 const subList = document.createElement('ul');
-                for (const subCategoryName in category.subCategories) {
+                for (const subCategoryName in promptData[categoryName]) {
                     const li = document.createElement('li');
                     const link = document.createElement('a');
                     link.href = '#';
@@ -310,7 +303,7 @@
             if (target.classList.contains('see-all-btn')) {
                 const categoryName = target.dataset.category;
                 // Show the first sub-category by default
-                const firstSubCategory = Object.keys(promptData[categoryName].subCategories)[0];
+                const firstSubCategory = Object.keys(promptData[categoryName])[0];
                 showDetailView(categoryName, firstSubCategory);
             }
 
@@ -343,42 +336,19 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('quick-links-search');
+    // grab the <nav> itself
     const nav = document.getElementById('quick-links-sidebar');
 
     searchInput.addEventListener('input', () => {
       const term = searchInput.value.trim().toLowerCase();
-      const links = Array.from(nav.querySelectorAll('a'));
 
-      links.forEach(link => {
-        const text = link.textContent.toLowerCase();
-        const subCategoryName = link.dataset.subcategory;
-        const categoryName = link.dataset.category;
-        const subCategory = promptData[categoryName].subCategories[subCategoryName];
+      // pick up every link (or change selector if you have list-items)
+      const items = Array.from(nav.querySelectorAll('a'));
 
-        let isMatch = text.includes(term);
-
-        if (subCategory && subCategory.prompts) {
-          subCategory.prompts.forEach(prompt => {
-            if (prompt.title.toLowerCase().includes(term) || prompt.content.toLowerCase().includes(term)) {
-              isMatch = true;
-            }
-          });
-        }
-
-        link.style.display = isMatch ? '' : 'none';
+      items.forEach(a => {
+        const text = a.textContent.toLowerCase();
+        a.style.display = text.includes(term) ? '' : 'none';
       });
-
-      // Filter the prompts in the main content area
-        const promptItems = Array.from(document.querySelectorAll('#prompt-display-area .mb-8'));
-        promptItems.forEach(item => {
-            const title = item.querySelector('h3').textContent.toLowerCase();
-            const content = item.querySelector('p').textContent.toLowerCase();
-            if (title.includes(term) || content.includes(term)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
-        });
     });
   });
 </script>
