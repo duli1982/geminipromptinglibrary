@@ -343,19 +343,42 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('quick-links-search');
-    // grab the <nav> itself
     const nav = document.getElementById('quick-links-sidebar');
 
     searchInput.addEventListener('input', () => {
       const term = searchInput.value.trim().toLowerCase();
+      const links = Array.from(nav.querySelectorAll('a'));
 
-      // pick up every link (or change selector if you have list-items)
-      const items = Array.from(nav.querySelectorAll('a'));
+      links.forEach(link => {
+        const text = link.textContent.toLowerCase();
+        const subCategoryName = link.dataset.subcategory;
+        const categoryName = link.dataset.category;
+        const subCategory = promptData[categoryName].subCategories[subCategoryName];
 
-      items.forEach(a => {
-        const text = a.textContent.toLowerCase();
-        a.style.display = text.includes(term) ? '' : 'none';
+        let isMatch = text.includes(term);
+
+        if (subCategory && subCategory.prompts) {
+          subCategory.prompts.forEach(prompt => {
+            if (prompt.title.toLowerCase().includes(term) || prompt.content.toLowerCase().includes(term)) {
+              isMatch = true;
+            }
+          });
+        }
+
+        link.style.display = isMatch ? '' : 'none';
       });
+
+      // Filter the prompts in the main content area
+        const promptItems = Array.from(document.querySelectorAll('#prompt-display-area .mb-8'));
+        promptItems.forEach(item => {
+            const title = item.querySelector('h3').textContent.toLowerCase();
+            const content = item.querySelector('p').textContent.toLowerCase();
+            if (title.includes(term) || content.includes(term)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     });
   });
 </script>
